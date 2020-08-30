@@ -1,0 +1,23 @@
+
+Type: AWS::SQS::Queue
+Properties:
+VisibilityTimeout: value
+
+
+Type: AWS::SQS::QueuePolicy
+Properties: 
+  PolicyDocument: Json
+  Queues: 
+    - String
+
+
+Type: AWS::SNS::Topic
+Properties: 
+  ContentBasedDeduplication: Boolean
+  DisplayName: String
+  KmsMasterKeyId: String
+  Subscription: 
+    - Subscription
+  Tags: 
+    - Tag
+  TopicName: String
