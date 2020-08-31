@@ -1,23 +1,140 @@
+Parameters:
 
-Type: AWS::SQS::Queue
-Properties:
-VisibilityTimeout: value
+  StackName:
+    Description: 'Repository Name'
+    Type: String
+    Default: 'BadHorse'
+
+  RepoName:
+    Description: 'Repository Name'
+    Type: String
+    Default: 'BadHorse'
+
+  AlarmEmail:
+    Description: 'AlarmEmail'
+    Type: String
+    Default: 'BadHorse'
+
+  MainQueueName:
+    Description: 'MainQueueName'
+    Type: String
+    Default: 'BadHorseQueue'
+
+Resources:
+  MainQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      #ContentBasedDeduplication: false
+      #DelaySeconds: Integer
+      #FifoQueue: Boolean
+      #KmsDataKeyReusePeriodSeconds: Integer
+      #KmsMasterKeyId: String
+      #MaximumMessageSize: Integer
+      #MessageRetentionPeriod: Integer
+      QueueName: !Ref MainQueueName
+      #ReceiveMessageWaitTimeSeconds: Integer
+      RedrivePolicy:
+        deadLetterTargetArn: 
+          Fn::GetAtt: 
+            - "DeadLetterQueue"
+            - "Arn"
+        maxReceiveCount: 5
+      #VisibilityTimeout: Integer
+      Tags: 
+        - Key: 'RepoName'
+          Value: !Ref RepoName
+        - Key: 'StackName'
+          Value: !Ref StackName
+
+  DeadLetterQueue: 
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: 'DeadLetterQueue'
+      Tags: 
+        - Key: 'RepoName'
+          Value: !Ref RepoName
+        - Key: 'StackName'
+          Value: !Ref StackName
 
 
-Type: AWS::SQS::QueuePolicy
-Properties: 
-  PolicyDocument: Json
-  Queues: 
-    - String
+  # MainQueuePolicy:
+  #   DependsOn: MainQueue
+  #   Type: AWS::SQS::QueuePolicy
+  #   Properties: 
+  #     Queues: 
+  #       - !GetAtt MainQueue.Arn
+  #     PolicyDocument: 
+  #       Statement: 
+  #         - Action: 
+  #             - "SQS:SendMessage" 
+  #             - "SQS:ReceiveMessage"
+  #           Effect: "Allow"
+  #           Resource: !GetAtt MainQueue.Arn
+  #           Principal: '*' 
+  #         - Action:
+  #             - sns:Subscribe
+  #           Effect: "Allow"
+  #           Resource: !Ref MainQueueTopic
+  #           Principal: '*'   
+      
+  # DeadLetterPolicy:
+  #   DependsOn: DeadLetterQueue
+  #   Type: AWS::SQS::QueuePolicy
+  #   Properties: 
+  #     Queues: 
+  #       - !GetAtt [ "DeadLetterQueue", "Arn" ]
+  #     PolicyDocument: 
+  #       Statement: 
+  #         - Action: 
+  #             - "SQS:SendMessage" 
+  #             - "SQS:ReceiveMessage"
+  #           Effect: "Allow"
+  #           Resource: !GetAtt MainQueue.Arn
+  #           Principal: '*' 
 
+  MainQueueTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: "MainQueueTopic"
+      Subscription: 
+          - Endpoint: !GetAtt MainQueue.Arn
+            Protocol: sqs
+      TopicName: "MainQueueTopic"
 
-Type: AWS::SNS::Topic
-Properties: 
-  ContentBasedDeduplication: Boolean
-  DisplayName: String
-  KmsMasterKeyId: String
-  Subscription: 
-    - Subscription
-  Tags: 
-    - Tag
-  TopicName: String
+  AlarmTopic: 
+      Type: AWS::SNS::Topic
+      Properties:
+        Subscription: 
+          - Endpoint: !Ref AlarmEmail
+            Protocol: "email"
+          
+  QueueDepthAlarm: 
+    Type: AWS::CloudWatch::Alarm
+    Properties: 
+      AlarmDescription: "Alarm if queue depth increases to more than 5 messages"
+      Namespace: "AWS/SQS"
+      MetricName: "ApproximateNumberOfMessagesVisible"
+      Dimensions: 
+        - Name: !Ref MainQueueName
+          Value: !GetAtt MainQueue.QueueName
+      Statistic: "Sum"
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: "GreaterThanThreshold"
+      AlarmActions: #### Find out about alarm actions
+        - 
+          Ref: "AlarmTopic"
+      InsufficientDataActions: 
+        - 
+          Ref: "AlarmTopic"
+Outputs: 
+  QueueURL: 
+    Description: "URL of new Amazon SQS Queue"
+    Value: !Ref MainQueue
+  QueueARN: 
+    Description: "ARN of new AmazonSQS Queue"
+    Value: !GetAtt MainQueue.Arn
+  QueueName: 
+    Description: "Name of new Amazon SQS Queue"
+    Value: !GetAtt MainQueue.QueueName
