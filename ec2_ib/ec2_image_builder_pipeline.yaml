@@ -3,6 +3,21 @@ Parameters:
   IBKeyPair:
     Type: String
     Default: ""
+  StackName:
+    Type: String
+    Default: ""
+  VpcId:
+    Type: String
+    Default: ""
+  SubnetId:
+    Type: String
+    Default: ""
+  SGId:
+    Type: String
+    Default: ""
+  BucketName:
+    Type: String
+    Default: ""
 
 Mappings: 
   RegionMap: 
@@ -26,31 +41,30 @@ Resources:
     Properties:
       Name: 'infrastructure-configuration-name'
       InstanceProfileName: !Ref IBInstanceProfile
-      Description: 'description'
+      Description: !Sub "ImageBuilder InfrastructureConfiguration for ${StackName}"
       InstanceTypes:
         - 't2.micro'
       KeyPair: !If [ EmptyIBKey, !Ref "AWS::NoValue", !Ref IBKeyPair]
-      # Logging:
-      #   S3Logs:
-      #     S3BucketName: 'imagebuilder-logging-bucket'
-      #     S3KeyPrefix: 'imagebuilder-bucket-prefix'
+      Logging:
+        S3Logs:
+          S3BucketName: !Ref BucketName
+          S3KeyPrefix: 'bh-imagebuilder'
       #SnsTopicArn: !Ref SnsTopicArn
       TerminateInstanceOnFailure: true
-      # SecurityGroupIds:
-      #   - 'security-group-id-1'
+      SecurityGroupIds:
+        - !Ref SGId
       #   - 'security-group-id-2'
-      #SubnetId: 'subnet-id'
+      SubnetId: !Ref SubnetId
 
   ImageRecipeAllParameters:
     Type: 'AWS::ImageBuilder::ImageRecipe'
     Properties:
-      Name: 'image-recipe-name'
+      Name: 'BHImageRecipe'
       Version: '1.0.0'
       ParentImage: !FindInMap [RegionMap, !Ref "AWS::Region", ParentImage]
       Description: 'ImageRecipeAllParameters'
       Components:
-        - ComponentArn: !Ref worng!!!!!!!
-        arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):component/[a-z0-9-_]+/(?:(?:(\d+|x)\.(\d+|x)\.(\d+|x))|(?:\d+\.\d+\.\d+/\d+)
+         - ComponentArn: !Ref ComponentAllParameters
       # BlockDeviceMappings:
       #   - DeviceName: "device-name"
       #     VirtualName: "virtual-name"
@@ -78,3 +92,40 @@ Resources:
       #   ScheduleExpression: 'cron(0 0 * * 0)'
       #   PipelineExecutionStartCondition: 'EXPRESSION_MATCH_ONLY'
       #Status: 'DISABLED'
+
+  ComponentAllParameters:
+    Type: 'AWS::ImageBuilder::Component'
+    Properties:
+      Name: 'BHComponent'
+      Platform: 'Linux'
+      Version: "1.0.0"
+      Description: 'ImageBuilder Component'
+      ChangeDescription: 'initial version.'
+      #KmsKeyId: 'customer-kms-key-id'
+      Data: |
+        name: HelloWorldTestingLinuxDoc - InlineData
+        description: This is hello world testing doc
+        schemaVersion: 1.0
+
+        phases:
+          - name: build
+            steps:
+              - name: HelloWorldStep
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - echo "Hello World! Build."
+          - name: validate
+            steps:
+              - name: HelloWorldStep
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - echo "Hello World! Validate."
+          - name: test
+            steps:
+              - name: HelloWorldStep
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - echo "Hello World! Test."

@@ -23,10 +23,12 @@ class ParametersFile:
         return parameters_data
 
     def GetParameters(self, parameter_name):
+        print("Working on Parameter: "+ parameter_name)
         parameters_data = self.ReadParameters()
         for key in parameters_data['Parameters']:
-            value = key['ParameterValue']
-        return value  
+            if key['ParameterKey'] == parameter_name:
+                value = key['ParameterValue']
+            return value  
 
     def StackParameters(self):
         parameters_data = self.ReadParameters()

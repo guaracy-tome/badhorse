@@ -1,45 +1,57 @@
-import boto3
+import boto3, sys
 from params_overrides import ParametersFile
-params = ParametersFile()
-
 from s3_buckets import S3Bucket
 s3 =  S3Bucket()
+params = ParametersFile()
 
 class CloudFormation:
     "make the magic happen"
 
-    aws_cfn = boto3.client('cloudformation')
-    #stack_name = params.GetParameters('StackName')
-    
+    aws_cfn = boto3.client('cloudformation')    
     def CheckIfStackExists(self, StackName):
+        # if StackName == None:
+        #     print("Running Stand alone. I'll take care of everything")
+        #     StackName = sys.argv[4]
         try:
-            response = aws_cfn.describe_stacks( StackName=StackName)
+            print("testing this stack: "+ StackName)
+            response = self.aws_cfn.describe_stacks( StackName=StackName)
             return True
         except:    
             print(StackName + " does not exist.")
             return False
 
-    def ValidateTemplate(self, file_name):
+    def ValidateTemplate(self, s3_template_url):
         ### Not used yet.
-        response = aws_cfn.validate_template(
-                                            TemplateBody='string',
-                                            TemplateURL='string'
-                                        )
+        response = aws_cfn.validate_template( TemplateURL=s3_template_url )
+        print(response)
 
-    def DeployStack(self, file_name, StackName, repo_name, BucketName, s3_template_url):
+    def CreateStack(self, StackName, s3_template_url, Parameters):
+        print("No Stack Found, Lets Deploy it.")
+        response = self.aws_cfn.create_stack(
+                    StackName=StackName,
+                    TemplateURL=s3_template_url,
+                    OnFailure='DELETE',
+                    Capabilities=['CAPABILITY_IAM'],
+                    Parameters=Parameters )
+        print(response)
+
+    def UpdateStack(self, StackName, s3_template_url, Parameters):
+        print("Stack Found, Lets Update it.")
+        response = self.aws_cfn.update_stack(
+                    StackName=StackName,
+                    TemplateURL=s3_template_url,
+                    Capabilities=['CAPABILITY_IAM'],
+                    Parameters=Parameters )
+        print(response)
+
+    def DeployStack(self, file_name, StackName, BucketName, s3_template_url):
         s3.UploadToS3(file_name, BucketName)
+        Parameters = params.StackParameters()
         if self.CheckIfStackExists(StackName) is False:
-            print("No Stack Found, Lets Deploy it.")
-            
-            Parameters = params.StackParameters()
-            deployment = self.aws_cfn.create_stack(
-                        StackName=StackName,
-                        TemplateURL=s3_template_url,
-                        OnFailure='DELETE',
-                        Parameters=Parameters )
-                                    
+            self.CreateStack( StackName, s3_template_url, Parameters )                      
         else:
-            print("Not doing...")
-
+            self.UpdateStack( StackName, s3_template_url, Parameters)
+    
     def DeleteStack(self, StackName):
-        response = aws_cfn.delete_stack( StackName='StackName')
+        response = self.aws_cfn.delete_stack( StackName=StackName)
+        print(response) 

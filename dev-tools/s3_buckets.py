@@ -6,7 +6,6 @@ class S3Bucket:
     "deal with S3 buckets"
 
     aws_s3 = boto3.client('s3')
-
     def UploadToS3(self, file_name, BucketName, object_name=None):
         "Upload a file to an S3 bucket"
 
