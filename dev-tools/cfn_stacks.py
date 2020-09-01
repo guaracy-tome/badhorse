@@ -19,26 +19,27 @@ class CloudFormation:
             print(StackName + " does not exist.")
             return False
 
-    def DeployStack(self, StackName, repo_name, BucketName, s3_template_url):
+    def ValidateTemplate(self, file_name):
+        ### Not used yet.
+        response = aws_cfn.validate_template(
+                                            TemplateBody='string',
+                                            TemplateURL='string'
+                                        )
+
+    def DeployStack(self, file_name, StackName, repo_name, BucketName, s3_template_url):
+        s3.UploadToS3(file_name, BucketName)
         if self.CheckIfStackExists(StackName) is False:
             print("No Stack Found, Lets Deploy it.")
-            file_name = repo_name + '.yml'
-            s3.UploadToS3(file_name, BucketName)
-            AlarmEmail = params.GetParameters('AlarmEmail')
-            MainQueueName = params.GetParameters('MainQueueName')
+            
+            Parameters = params.StackParameters()
             deployment = self.aws_cfn.create_stack(
                         StackName=StackName,
                         TemplateURL=s3_template_url,
                         OnFailure='DELETE',
-                        Parameters=[
-                            {'ParameterKey': 'RepoName',
-                             'ParameterValue': repo_name},
-                             {'ParameterKey': 'AlarmEmail',
-                             'ParameterValue': AlarmEmail},
-                             {'ParameterKey': 'MainQueueName',
-                             'ParameterValue': MainQueueName
-                             }]
-                        )
+                        Parameters=Parameters )
                                     
         else:
             print("Not doing...")
+
+    def DeleteStack(self, StackName):
+        response = aws_cfn.delete_stack( StackName='StackName')
