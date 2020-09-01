@@ -8,8 +8,9 @@ class ParametersFile:
         files_list = os.listdir(os.getcwd())
         for files in files_list:
             if files.endswith('.yml'):
-                print(files[:-4])
                 template_name = files[:-4]
+            elif files.endswith('.yaml'):
+                template_name = files[:-5]
         parameters_file = template_name + '_parameters.json'
         return parameters_file
 
