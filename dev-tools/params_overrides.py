@@ -1,16 +1,15 @@
 import json
+import os
 
 class ParametersFile:
     "Deals with Parameters file"
 
-    def ParamFilepath(self):
-        ### Not used yet ###
-        path = '../sqs/'
-        #print(path)
-        return path
-
     def ParamFileName(self):
-        template_name = 'sqs_consumer_infra'
+        files_list = os.listdir(os.getcwd())
+        for files in files_list:
+            if files.endswith('.yml'):
+                print(files[:-4])
+                template_name = files[:-4]
         parameters_file = template_name + '_parameters.json'
         return parameters_file
 

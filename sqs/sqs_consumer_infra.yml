@@ -19,7 +19,7 @@ Parameters:
     Description: 'MainQueueName'
     Type: String
     Default: 'BadHorseQueue'
-
+  
 Resources:
   MainQueue:
     Type: AWS::SQS::Queue

@@ -1,0 +1,80 @@
+
+Parameters:
+  IBKeyPair:
+    Type: String
+    Default: ""
+
+Mappings: 
+  RegionMap: 
+    us-east-1: 
+      "ParentImage": "ami-0c5bf07e510b75b11"
+    eu-west-1: 
+      "ParentImage": "ami-08f51d843bf37ded6"
+      
+Conditions:
+  EmptyIBKey: !Equals [ !Ref IBKeyPair, ""]
+Resources:
+  IBInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Path: "/"
+      Roles: 
+        - "ibguara3"
+
+  InfrastructureConfigurationAll:
+    Type: 'AWS::ImageBuilder::InfrastructureConfiguration'
+    Properties:
+      Name: 'infrastructure-configuration-name'
+      InstanceProfileName: !Ref IBInstanceProfile
+      Description: 'description'
+      InstanceTypes:
+        - 't2.micro'
+      KeyPair: !If [ EmptyIBKey, !Ref "AWS::NoValue", !Ref IBKeyPair]
+      # Logging:
+      #   S3Logs:
+      #     S3BucketName: 'imagebuilder-logging-bucket'
+      #     S3KeyPrefix: 'imagebuilder-bucket-prefix'
+      #SnsTopicArn: !Ref SnsTopicArn
+      TerminateInstanceOnFailure: true
+      # SecurityGroupIds:
+      #   - 'security-group-id-1'
+      #   - 'security-group-id-2'
+      #SubnetId: 'subnet-id'
+
+  ImageRecipeAllParameters:
+    Type: 'AWS::ImageBuilder::ImageRecipe'
+    Properties:
+      Name: 'image-recipe-name'
+      Version: '1.0.0'
+      ParentImage: !FindInMap [RegionMap, !Ref "AWS::Region", ParentImage]
+      Description: 'ImageRecipeAllParameters'
+      Components:
+        - ComponentArn: !Ref worng!!!!!!!
+        arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):component/[a-z0-9-_]+/(?:(?:(\d+|x)\.(\d+|x)\.(\d+|x))|(?:\d+\.\d+\.\d+/\d+)
+      # BlockDeviceMappings:
+      #   - DeviceName: "device-name"
+      #     VirtualName: "virtual-name"
+      #     Ebs:
+      #       DeleteOnTermination: true
+      #       Encrypted: true
+      #       Iops: 100
+      #       KmsKeyId: !Ref KmsKeyId
+      #       SnapshotId: "snapshot-id"
+      #       VolumeType: "gp2"
+      #       VolumeSize: 100
+
+  ImagePipelineAllParameters:
+    Type: 'AWS::ImageBuilder::ImagePipeline'
+    Properties:
+      Name: !Sub "bh_ec2_ibe-${AWS::Region}"
+      Description: 'The start of the automated EC2 Image Builder'
+      ImageRecipeArn: !Ref ImageRecipeAllParameters
+      InfrastructureConfigurationArn: !Ref InfrastructureConfigurationAll
+      #DistributionConfigurationArn: !Ref DistributionConfigurationArn
+      #ImageTestsConfiguration:
+        #ImageTestsEnabled: false
+        #TimeoutMinutes: 90
+      # Schedule:
+      #   ScheduleExpression: 'cron(0 0 * * 0)'
+      #   PipelineExecutionStartCondition: 'EXPRESSION_MATCH_ONLY'
+      #Status: 'DISABLED'
