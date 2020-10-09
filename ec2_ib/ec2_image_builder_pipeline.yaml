@@ -50,7 +50,7 @@ Resources:
           S3BucketName: !Ref BucketName
           S3KeyPrefix: 'bh-imagebuilder'
       #SnsTopicArn: !Ref SnsTopicArn
-      TerminateInstanceOnFailure: false
+      TerminateInstanceOnFailure: true
       SecurityGroupIds:
         - !Ref SGId
       #   - 'security-group-id-2'
@@ -60,7 +60,7 @@ Resources:
     Type: 'AWS::ImageBuilder::ImageRecipe'
     Properties:
       Name: 'BHImageRecipe'
-      Version: '0.0.1'
+      Version: '1.0.0'
       ParentImage: !FindInMap [RegionMap, !Ref "AWS::Region", ParentImage]
       Description: 'ImageRecipeAllParameters'
       Components:
@@ -84,7 +84,7 @@ Resources:
       Description: 'The start of the automated EC2 Image Builder'
       ImageRecipeArn: !Ref ImageRecipeAllParameters
       InfrastructureConfigurationArn: !Ref InfrastructureConfigurationAll
-      DistributionConfigurationArn: !Ref DistributionConfig
+      #DistributionConfigurationArn: !Ref DistributionConfigurationArn
       #ImageTestsConfiguration:
         #ImageTestsEnabled: false
         #TimeoutMinutes: 90
@@ -92,33 +92,13 @@ Resources:
       #   ScheduleExpression: 'cron(0 0 * * 0)'
       #   PipelineExecutionStartCondition: 'EXPRESSION_MATCH_ONLY'
       #Status: 'DISABLED'
-  DistributionConfig:
-    Type: "AWS::ImageBuilder::DistributionConfiguration"
-    Properties:
-      Name: 'bh_Dist_config'
-      Description: 'bh_Dist_config'
-      Distributions:
-        - Region: !Ref "AWS::Region"
-          AmiDistributionConfiguration:
-            Name: 'BadHorseAmiConfiguration - {{ imagebuilder:buildDate }}'
-            Description: 'AmiDistributionConfiguration'
-            AmiTags:
-              AmiTagKey: 'BadHorse'
-          #   LaunchPermissionConfiguration:
-          #     UserGroups:
-          #       - 'String - group name 1'
-          #       - 'String - group name 1'
-          #     UserIds:
-          #       - 'String - account id 1'
-          #       - 'String - account id 2'
-          
-  
+
   ComponentAllParameters:
     Type: 'AWS::ImageBuilder::Component'
     Properties:
       Name: 'BHComponent'
       Platform: 'Linux'
-      Version: "0.0.1"
+      Version: "1.0.0"
       Description: 'ImageBuilder Component'
       ChangeDescription: 'initial version.'
       #KmsKeyId: 'customer-kms-key-id'
@@ -135,17 +115,17 @@ Resources:
                 inputs:
                   commands:
                     - echo "Hello World! Build."
-          # - name: validate
-          #   steps:
-          #     - name: HelloWorldStep
-          #       action: ExecuteBash
-          #       inputs:
-          #         commands:
-          #           - echo "Hello World! Validate."
-          # - name: test
-          #   steps:
-          #     - name: HelloWorldStep
-          #       action: ExecuteBash
-          #       inputs:
-          #         commands:
-          #           - echo "Hello World! Test."
+          - name: validate
+            steps:
+              - name: HelloWorldStep
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - echo "Hello World! Validate."
+          - name: test
+            steps:
+              - name: HelloWorldStep
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - echo "Hello World! Test."

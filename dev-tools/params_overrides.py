@@ -27,8 +27,8 @@ class ParametersFile:
         parameters_data = self.ReadParameters()
         for key in parameters_data['Parameters']:
             if key['ParameterKey'] == parameter_name:
-                kvalue = key['ParameterValue']
-                return kvalue  
+                value = key['ParameterValue']
+            return value  
 
     def StackParameters(self):
         parameters_data = self.ReadParameters()

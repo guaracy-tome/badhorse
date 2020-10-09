@@ -57,40 +57,40 @@ Resources:
           Value: !Ref StackName
 
 
-  MainQueuePolicy:
-    DependsOn: MainQueue
-    Type: AWS::SQS::QueuePolicy
-    Properties: 
-      Queues: 
-        - !Ref MainQueue
-      PolicyDocument: 
-        Statement: 
-          - Action: 
-              - "SQS:SendMessage" 
-              - "SQS:ReceiveMessage"
-            Effect: "Allow"
-            Resource: !GetAtt MainQueue.Arn
-            Principal: '*' 
-          # - Action:
-          #     - sns:Subscribe
-          #   Effect: "Allow"
-          #   Resource: !Ref MainQueueTopic
-          #   Principal: '*'   
+  # MainQueuePolicy:
+  #   DependsOn: MainQueue
+  #   Type: AWS::SQS::QueuePolicy
+  #   Properties: 
+  #     Queues: 
+  #       - !GetAtt MainQueue.Arn
+  #     PolicyDocument: 
+  #       Statement: 
+  #         - Action: 
+  #             - "SQS:SendMessage" 
+  #             - "SQS:ReceiveMessage"
+  #           Effect: "Allow"
+  #           Resource: !GetAtt MainQueue.Arn
+  #           Principal: '*' 
+  #         - Action:
+  #             - sns:Subscribe
+  #           Effect: "Allow"
+  #           Resource: !Ref MainQueueTopic
+  #           Principal: '*'   
       
-  DeadLetterPolicy:
-    DependsOn: DeadLetterQueue
-    Type: AWS::SQS::QueuePolicy
-    Properties: 
-      Queues: 
-        - !Ref DeadLetterQueue
-      PolicyDocument: 
-        Statement: 
-          - Action: 
-              - "SQS:SendMessage" 
-              - "SQS:ReceiveMessage"
-            Effect: "Allow"
-            Resource: !GetAtt MainQueue.Arn
-            Principal: '*' 
+  # DeadLetterPolicy:
+  #   DependsOn: DeadLetterQueue
+  #   Type: AWS::SQS::QueuePolicy
+  #   Properties: 
+  #     Queues: 
+  #       - !GetAtt [ "DeadLetterQueue", "Arn" ]
+  #     PolicyDocument: 
+  #       Statement: 
+  #         - Action: 
+  #             - "SQS:SendMessage" 
+  #             - "SQS:ReceiveMessage"
+  #           Effect: "Allow"
+  #           Resource: !GetAtt MainQueue.Arn
+  #           Principal: '*' 
 
   MainQueueTopic:
     Type: AWS::SNS::Topic
