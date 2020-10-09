@@ -1,7 +1,7 @@
 import boto3, sys
 from params_overrides import ParametersFile
 from s3_buckets import S3Bucket
-s3 =  S3Bucket()
+s3 = S3Bucket()
 params = ParametersFile()
 
 class CloudFormation:
@@ -13,11 +13,12 @@ class CloudFormation:
         #     print("Running Stand alone. I'll take care of everything")
         #     StackName = sys.argv[4]
         try:
-            print("testing this stack: "+ StackName)
+            print("Testing the Stack: "+ StackName)
             response = self.aws_cfn.describe_stacks( StackName=StackName)
+            print("Stack Found, Lets Update it.")
             return True
         except:    
-            print(StackName + " does not exist.")
+            print(StackName + " does not exist. I will create it")
             return False
 
     def ValidateTemplate(self, s3_template_url):
@@ -26,7 +27,6 @@ class CloudFormation:
         print(response)
 
     def CreateStack(self, StackName, s3_template_url, Parameters):
-        print("No Stack Found, Lets Deploy it.")
         response = self.aws_cfn.create_stack(
                     StackName=StackName,
                     TemplateURL=s3_template_url,
@@ -36,7 +36,6 @@ class CloudFormation:
         print(response)
 
     def UpdateStack(self, StackName, s3_template_url, Parameters):
-        print("Stack Found, Lets Update it.")
         response = self.aws_cfn.update_stack(
                     StackName=StackName,
                     TemplateURL=s3_template_url,
